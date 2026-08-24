@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "david-analytics-lab",
+      "name": "David Analytics Lab",
+      "repository": "David-Edmonds/David-Edmonds.github.io",
+      "status": "pull-request-open",
+      "priority": 1,
+      "pull_request": 1,
+      "next_action": "Review GitHub checks, merge pull request #1 when green, regenerate docs, and publish the improved resume"
+    },
+    {
+      "id": "social-content-os",
+      "name": "Social Content OS",
+      "repository": null,
+      "status": "blueprint",
+      "priority": 2,
+      "next_action": "Validate the content record schema with Airtable and Buffer"
+    },
+    {
+      "id": "job-opportunity-engine",
+      "name": "Job Opportunity Engine",
+      "repository": null,
+      "status": "blueprint",
+      "priority": 3,
+      "next_action": "Define role scoring, source rules, and review workflow"
+    }
+  ]
+}
