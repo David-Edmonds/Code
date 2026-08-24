@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Draft Assistant</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body data-poll-seconds="{{ poll_seconds }}">
+  <header>
+    <div>
+      <p class="eyebrow">DAVID'S DRAFT ROOM</p>
+      <h1>Live Draft Assistant</h1>
+    </div>
+    <div class="status-group">
+      <span id="mode-pill" class="pill">Loading</span>
+      <span id="turn-pill" class="pill muted">Checking turn</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-grid">
+      <article class="panel recommendation-panel">
+        <div class="panel-title-row">
+          <div>
+            <p class="eyebrow">PICK NOW</p>
+            <h2>Top three</h2>
+          </div>
+          <button id="refresh-button" class="secondary">Refresh</button>
+        </div>
+        <div id="recommendations" class="recommendations"></div>
+        <div class="button-row">
+          <button id="copy-button">Copy for ChatGPT</button>
+          <button id="ai-button" class="secondary">AI review</button>
+        </div>
+        <pre id="ai-result" class="ai-result hidden"></pre>
+      </article>
+
+      <article class="panel clock-panel">
+        <p class="eyebrow">DRAFT POSITION</p>
+        <div class="clock-number" id="next-pick">–</div>
+        <p id="turn-detail">Loading draft state…</p>
+        <div class="mini-stats">
+          <div><strong id="completed-picks">–</strong><span>picks made</span></div>
+          <div><strong id="until-turn">–</strong><span>before you</span></div>
+          <div><strong id="next-my-pick">–</strong><span>your next pick</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow">YOUR BUILD</p><h2>Roster</h2></div>
+        </div>
+        <div id="roster" class="list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow">BOARD</p><h2>Recent picks</h2></div>
+        </div>
+        <div id="recent-picks" class="list compact"></div>
+      </article>
+
+      <article class="panel manual-panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow">BACKUP MODE</p><h2>Enter a pick</h2></div>
+        </div>
+        <form id="manual-form">
+          <label>Player name<input id="manual-name" list="player-options" autocomplete="off" required></label>
+          <datalist id="player-options"></datalist>
+          <div class="two-column">
+            <label>Position<input id="manual-position" placeholder="WR"></label>
+            <label>NFL team<input id="manual-team" placeholder="DAL"></label>
+          </div>
+          <div class="button-row"><button type="submit">Add next pick</button><button id="undo-button" type="button" class="secondary">Undo last</button></div>
+        </form>
+        <p class="helper">Use this only if Yahoo authorization is unavailable. Picks are assigned automatically in snake order.</p>
+      </article>
+
+      <article class="panel settings-panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow">SETUP</p><h2>League</h2></div>
+        </div>
+        <form id="config-form">
+          <div class="two-column">
+            <label>Teams<input id="teams" type="number" min="4" max="20"></label>
+            <label>Your slot<input id="slot" type="number" min="1" max="20"></label>
+            <label>Rounds<input id="rounds" type="number" min="1" max="40"></label>
+            <label>Team ID<input id="team-id" type="number" min="1"></label>
+          </div>
+          <label>Yahoo league ID<input id="league-id"></label>
+          <label>Scoring<select id="scoring"><option value="ppr">Full PPR</option><option value="half-ppr">Half PPR</option><option value="standard">Standard</option></select></label>
+          <button type="submit">Save setup</button>
+        </form>
+        <div class="setup-actions">
+          <a id="yahoo-connect" class="button-link" href="/auth/yahoo">Connect Yahoo</a>
+          <label class="file-button">Import rankings CSV<input id="rankings-file" type="file" accept=".csv"></label>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel available-panel">
+      <div class="panel-title-row">
+        <div><p class="eyebrow">NEXT OPTIONS</p><h2>Top available</h2></div>
+        <span id="last-refresh" class="helper"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>Rank</th><th>ADP</th><th>Status</th><th>Why</th></tr></thead>
+          <tbody id="available-table"></tbody>
+        </table>
+      </div>
+      <p id="errors" class="errors"></p>
+      <p class="attribution">Data attribution: Yahoo Fantasy Sports API, Fantasy Football Calculator, and Sleeper.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
