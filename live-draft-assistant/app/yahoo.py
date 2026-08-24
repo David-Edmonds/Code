@@ -14,7 +14,6 @@ import xmltodict
 from .models import DraftPick, Player
 from .utils import ensure_list, find_all, first_scalar, safe_int
 
-
 AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth"
 TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token"
 FANTASY_BASE = "https://fantasysports.yahooapis.com/fantasy/v2"
@@ -102,7 +101,8 @@ class YahooClient:
                 },
             )
         if response.status_code >= 400:
-            raise YahooError(f"Yahoo token request failed: {response.status_code} {response.text[:300]}")
+            message = f"Yahoo token request failed: {response.status_code} {response.text[:300]}"
+            raise YahooError(message)
         return response.json()
 
     async def get_xml(self, path: str) -> dict[str, Any]:

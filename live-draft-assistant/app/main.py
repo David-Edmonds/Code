@@ -4,8 +4,8 @@ import asyncio
 import csv
 import io
 import time
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import Annotated, Any
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -22,7 +22,6 @@ from .recommender import recommend
 from .snake import next_pick_for_slot, picks_until_turn, slot_for_pick
 from .state import ManualDraftStore
 from .yahoo import YahooClient, YahooError
-
 
 app = FastAPI(title="Live Draft Assistant", version="0.2.0")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "app" / "static"), name="static")
@@ -230,7 +229,7 @@ async def delete_manual_pick(overall_pick: int) -> dict[str, Any]:
 
 
 @app.post("/api/rankings/upload")
-async def upload_rankings(file: UploadFile = File(...)) -> dict[str, Any]:
+async def upload_rankings(file: Annotated[UploadFile, File()]) -> dict[str, Any]:
     content = await file.read()
     try:
         text = content.decode("utf-8-sig")
@@ -340,7 +339,7 @@ async def draft_state() -> dict[str, Any]:
         "recent_picks": [pick.to_dict() for pick in picks[-12:]][::-1],
         "chatgpt_prompt": prompt,
         "last_refresh": datetime.fromtimestamp(
-            RUNTIME_CACHE.get("last_refresh") or time.time(), tz=timezone.utc
+            RUNTIME_CACHE.get("last_refresh") or time.time(), tz=UTC
         ).isoformat(),
         "errors": errors + list(RUNTIME_CACHE.get("errors") or [])[-2:],
         "attribution": [
@@ -488,14 +487,15 @@ def build_chatgpt_prompt(
         "half-ppr": "half PPR",
         "standard": "standard",
     }.get(config.scoring, config.scoring)
-    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    timestamp = datetime.now(UTC).isoformat(timespec="seconds")
     return (
         f"Live Yahoo fantasy draft as of {timestamp}. "
         f"{config.teams}-team {scoring_label} snake, my slot is {config.slot}. "
         f"Next overall pick is {next_overall}; my next pick is {next_mine}. "
         f"My roster: {roster_text}. Recent picks: {recent_text}. "
         f"Best available: {available_text}. "
-        "Use current injury, suspension, depth-chart, and role news when it materially changes the pick. "
+        "Use current injury, suspension, depth-chart, and role news when it "
+        "materially changes the pick. "
         "Return exactly the best 3 player names in order. No explanation. "
         "Do not include anyone already drafted."
     )

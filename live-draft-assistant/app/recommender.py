@@ -6,7 +6,6 @@ from math import inf
 from .models import Player
 from .rankings import canonical_name
 
-
 SKILL_POSITIONS = {"QB", "RB", "WR", "TE"}
 INJURY_BLOCK = {"IR", "PUP", "SUSP", "SUSPENDED", "OUT"}
 
@@ -43,7 +42,9 @@ def blended_rank(player: Player) -> float:
     return sum(value * weight for value, weight in components) / total_weight
 
 
-def _need_adjustment(position: str, counts: Counter[str], round_number: int, superflex: bool) -> float:
+def _need_adjustment(
+    position: str, counts: Counter[str], round_number: int, superflex: bool
+) -> float:
     adjustment = 0.0
     if position in {"RB", "WR"}:
         if counts[position] == 0:
@@ -130,7 +131,12 @@ def recommend(
         player.reason = _reason(player, counts, round_number, overall_pick)
         ranked.append(player)
 
-    ranked.sort(key=lambda item: (item.score if item.score is not None else inf, blended_rank(item)))
+    ranked.sort(
+        key=lambda item: (
+            item.score if item.score is not None else inf,
+            blended_rank(item),
+        )
+    )
     return ranked[:limit]
 
 

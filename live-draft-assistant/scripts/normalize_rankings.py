@@ -11,7 +11,9 @@ def first(row: dict[str, str], names: list[str]) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Normalize an expert rankings CSV for the draft assistant")
+    parser = argparse.ArgumentParser(
+        description="Normalize an expert rankings CSV for the draft assistant"
+    )
     parser.add_argument("input", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
@@ -39,7 +41,10 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="") as destination:
-        writer = csv.DictWriter(destination, fieldnames=["rank", "player", "position", "team", "tier", "adp", "source"])
+        writer = csv.DictWriter(
+            destination,
+            fieldnames=["rank", "player", "position", "team", "tier", "adp", "source"],
+        )
         writer.writeheader()
         writer.writerows(output_rows)
     print(f"Wrote {len(output_rows)} players to {args.output}")

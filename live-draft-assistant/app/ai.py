@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 
-
 from .models import Player
 
 
@@ -33,9 +32,11 @@ async def ai_review(
             {
                 "role": "system",
                 "content": (
-                    "You are an elite redraft fantasy-football draft analyst. Use the supplied live board, "
-                    "full-PPR roster construction, positional scarcity, and market value. Return exactly "
-                    "three player names in order, one per line. No explanation. Never name a drafted player."
+                    "You are an elite redraft fantasy-football draft analyst. "
+                    "Use the supplied live board, full-PPR roster construction, "
+                    "positional scarcity, and market value. Return exactly three "
+                    "player names in order, one per line. No explanation. Never "
+                    "name a drafted player."
                 ),
             },
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},

@@ -62,7 +62,9 @@ async def fetch_adp(
     return players
 
 
-async def fetch_sleeper_players(cache_path: Path, *, force: bool = False) -> dict[str, dict[str, Any]]:
+async def fetch_sleeper_players(
+    cache_path: Path, *, force: bool = False
+) -> dict[str, dict[str, Any]]:
     if not force and _fresh(cache_path, 20 * 60 * 60):
         return json.loads(cache_path.read_text(encoding="utf-8"))
 

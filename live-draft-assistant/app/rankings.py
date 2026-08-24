@@ -6,7 +6,6 @@ from pathlib import Path
 from .models import Player
 from .utils import normalize_name, safe_float, safe_int, unique_by
 
-
 PLAYER_ALIASES = {
     "jamescookiii": "jamescook",
     "kennethwalkeriii": "kennethwalker",

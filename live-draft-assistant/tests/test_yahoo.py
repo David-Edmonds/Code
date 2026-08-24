@@ -7,7 +7,7 @@ xmltodict_stub = types.ModuleType("xmltodict")
 xmltodict_stub.parse = lambda value: value  # type: ignore[attr-defined]
 sys.modules.setdefault("xmltodict", xmltodict_stub)
 
-from app.yahoo import YahooClient
+from app.yahoo import YahooClient  # noqa: E402
 
 
 @pytest.mark.asyncio
