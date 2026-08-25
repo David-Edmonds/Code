@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "table": "Application Tracker",
+  "mapping": {
+    "id": "ID",
+    "company": "Company",
+    "title": "Job Title",
+    "location": "Location",
+    "remote": "Remote",
+    "employment_type": "Employment Type",
+    "salary_range": "Salary Range",
+    "salary_min": "Salary Min",
+    "salary_max": "Salary Max",
+    "salary_period": "Salary Period",
+    "currency": "Currency",
+    "posted_date": "Posted Date",
+    "source": "Source",
+    "source_url": "Source URL",
+    "description": "Description",
+    "score": "Fit Score",
+    "fit": "Fit Tier",
+    "review_decision": "Review Decision",
+    "requires_us_residence": "Requires U.S. Residence",
+    "requires_specific_state": "Requires Specific State",
+    "blockers": "Blockers",
+    "review_flags": "Review Flags",
+    "reasons": "Scoring Reasons",
+    "engine_version": "Engine Version",
+    "last_scored": "Last Scored"
+  }
+}
