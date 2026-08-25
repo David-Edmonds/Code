@@ -1,0 +1,29 @@
+name: Feature
+about: Define one useful product outcome
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is slow, confusing, risky, or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable results.
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Data, privacy, permissions, and cost
