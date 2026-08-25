@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "profile_name": "David Edmonds - remote analytics",
+  "remote_required": true,
+  "minimum_salary_usd": 80000,
+  "preferred_salary_usd": 95000,
+  "work_authorized_us": true,
+  "sponsorship_needed": false,
+  "cross_border_review_required": true,
+  "allowed_employment_types": [
+    "full-time",
+    "contract",
+    "contract-to-hire"
+  ],
+  "target_titles": [
+    "senior data analyst",
+    "data analyst",
+    "business intelligence analyst",
+    "bi analyst",
+    "operations analytics",
+    "operations analyst",
+    "sales operations analyst",
+    "revenue operations analyst",
+    "reporting analyst",
+    "insights analyst",
+    "analytics consultant"
+  ],
+  "skill_weights": {
+    "sql": 5,
+    "power bi": 5,
+    "tableau": 4,
+    "excel": 4,
+    "dax": 2,
+    "postgresql": 1,
+    "python": 2,
+    "sharepoint": 1,
+    "data quality": 2,
+    "kpi": 2,
+    "dashboard": 2
+  },
+  "responsibility_groups": {
+    "business_intelligence": ["dashboard", "business intelligence", "power bi", "tableau"],
+    "reporting": ["reporting", "report automation", "recurring report"],
+    "analytics": ["analysis", "insights", "trend analysis"],
+    "operations": ["operations", "sales operations", "revenue operations"],
+    "data_quality": ["data quality", "validation", "reconciliation"],
+    "stakeholders": ["stakeholder", "leadership", "cross-functional"]
+  },
+  "hard_block_phrases": [
+    "data entry clerk",
+    "commission only",
+    "commission-only",
+    "pay to apply",
+    "training fee",
+    "unpaid internship"
+  ],
+  "risk_phrases": [
+    "whatsapp interview",
+    "telegram interview",
+    "crypto payment",
+    "purchase equipment from our vendor",
+    "immediate offer without interview"
+  ]
+}
