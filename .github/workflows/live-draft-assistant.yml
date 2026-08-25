@@ -44,3 +44,21 @@ jobs:
 
       - name: Compile
         run: python -m compileall -q app scripts
+
+      - name: Validate Chrome widget
+        run: |
+          python -m json.tool extension/manifest.json > /dev/null
+          node --check extension/service-worker.js
+          node --check extension/sidepanel.js
+
+      - name: Package Windows-ready assistant
+        run: |
+          zip -r ../live-draft-assistant.zip . \
+            -x ".venv/*" ".data/*" "__pycache__/*" "*.pyc" ".env"
+
+      - name: Upload Windows-ready assistant
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-draft-assistant
+          path: live-draft-assistant.zip
+          if-no-files-found: error

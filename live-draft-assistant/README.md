@@ -1,75 +1,121 @@
 # Live Draft Assistant
 
-A local-first assistant for David's Yahoo Fantasy Football drafts. It watches the live Yahoo draft board when OAuth is available, combines league-specific Yahoo rank with fresh 10-team PPR ADP, enriches player status from Sleeper, and returns three concise recommendations. Manual mode remains available if Yahoo authorization fails.
+A local Yahoo Fantasy Football draft companion built for David's league—not a generic expert-rankings widget.
 
-## What it does
+It supports:
 
-- Polls Yahoo draft results during the live draft.
-- Removes drafted players automatically.
-- Tracks your roster using Yahoo team ID `10`.
-- Uses current Yahoo league rank, Fantasy Football Calculator ADP, an optional personal rankings CSV, and Sleeper injury metadata.
-- Applies full-PPR snake-draft roster rules and positional scarcity.
-- Gives three names immediately.
-- Copies a compact live-board prompt for regular ChatGPT.
-- Optionally calls the OpenAI API for a second review.
+- Keeper leagues
+- Traded draft positions
+- Bonus or extra picks
+- Any non-standard pick order
+- David's target list, avoid list, QB/TE timing, and strategy notes
+- Yahoo live draft syncing through OAuth
+- A Chrome side-panel widget beside the Yahoo draft room
+- Manual backup mode if Yahoo access fails
+- One-click context copying for a final decision in regular ChatGPT
 
-## Start on Windows
+## The simple setup
 
-1. Download or clone the repository.
-2. Open the `live-draft-assistant` folder.
-3. Double-click `run_windows.bat`.
-4. The app opens at `http://127.0.0.1:8765`.
+1. Double-click `run_windows.bat`.
+2. In the dashboard, confirm the league size, scoring, Yahoo team ID, and your normal draft slot.
+3. Open **Keepers, traded picks, and your style**.
+4. Paste the full owner sequence if the draft is not a normal snake.
+5. Add keeper lines.
+6. Save the rules.
+7. Load the `extension` folder as an unpacked Chrome extension.
+8. Open Yahoo's draft room and click the extension icon.
 
-Manual mode works without credentials. The first run installs the required Python packages.
+The widget stays beside Yahoo and shows the top three choices, your roster, whose pick it is, and when you pick next.
 
-## Connect Yahoo
+## How to represent special picks
 
-Yahoo private-league access uses OAuth; never paste your Yahoo password into this app.
+The custom order is a list of the owner slot for every overall pick.
 
-1. Create or obtain a Yahoo Sports developer application.
-2. Set its callback URL to exactly:
+Example normal 4-team snake:
 
-   `http://127.0.0.1:8765/auth/callback`
+```text
+1,2,3,4,4,3,2,1
+```
 
-3. Copy `.env.example` to `.env` if the launcher has not already done it.
-4. Add `YAHOO_CLIENT_ID` and `YAHOO_CLIENT_SECRET` to `.env`.
-5. Start the app and click **Connect Yahoo**.
+If slot 2 won a bonus pick after pick 4:
 
-The supplied defaults correspond to the shared URL:
+```text
+1,2,3,4,2,4,3,2,1
+```
+
+If slot 3 traded pick 7 to slot 1, put `1` in the seventh position.
+
+Use the owner's original draft-slot number—not Yahoo's team ID—in this list. Your Yahoo team ID is only used to identify your roster from the live Yahoo API.
+
+## Keeper format
+
+Enter one player per line:
+
+```text
+Player | owner slot | position | NFL team | note
+CeeDee Lamb | 7 | WR | DAL | costs Round 3
+```
+
+Keepers are removed from the available-player pool and appear on the correct owner's roster. The custom order should match how Yahoo actually handles any picks consumed by keepers.
+
+## Chrome widget
+
+1. Open `chrome://extensions`.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the project's `extension` folder.
+5. Pin **David's Live Draft Widget**.
+6. Keep `run_windows.bat` running.
+7. Open Yahoo and click the widget icon.
+
+The Chrome Side Panel API keeps the assistant alongside the Yahoo page. The extension only talks to the local app at `127.0.0.1:8765`; it does not contain Yahoo or OpenAI credentials.
+
+## Yahoo live connection
+
+Manual mode works immediately. For automatic live picks, create a Yahoo Sports developer application with this exact callback:
+
+```text
+http://127.0.0.1:8765/auth/callback
+```
+
+Copy `.env.example` to `.env`, add your Yahoo Client ID and Client Secret, restart the app, and click **Connect Yahoo**.
+
+Defaults from the shared league URL:
 
 - League ID: `810161`
-- Team ID: `10`
-- League size: `10`
-- Draft slot: `7` (change this if Yahoo assigns a different slot)
-- Scoring: full PPR
+- Yahoo team ID: `10`
+- Full PPR
+- 10 teams
 
-## Rankings and accuracy
+The draft slot is not assumed permanently because keeper/trade leagues can change it.
 
-The app deliberately does not commit a copied expert ranking list to this public repository. It uses three live/personal inputs instead:
+## Data and decisions
 
-1. Yahoo's league-specific available-player order.
-2. Daily 10-team PPR ADP from Fantasy Football Calculator.
-3. An optional fresh rankings CSV imported in the browser.
+The assistant combines:
 
-Most CSVs work when they contain a player/name column and a rank/ECR column. A template is in `data/rankings.template.csv`.
+1. Yahoo's live league board and available-player order.
+2. Current PPR ADP from Fantasy Football Calculator.
+3. Sleeper player and injury metadata.
+4. An optional fresh rankings CSV.
+5. Your keepers, custom pick ownership, targets, avoids, and roster strategy.
 
-Sleeper's public player endpoint supplies current team and injury metadata and is cached for the day. Fantasy Football Calculator ADP is also cached because it updates daily.
+The local engine gives a fast default. For difficult picks, press **Copy for ChatGPT** and paste the result into the regular ChatGPT conversation. The prompt includes the exact board, keepers, custom order, your roster, your strategy, and how long until your next owned pick.
 
-## Regular ChatGPT vs API review
+## Windows start
 
-The fastest free workflow is **Copy for ChatGPT** and paste the prompt into this conversation. It includes the roster, recent picks, top available players, rankings, ADP, and injury status.
+Double-click:
 
-The **AI review** button requires a separate OpenAI API key and API billing. A ChatGPT subscription does not automatically provide API credits. Put the key in `.env` as `OPENAI_API_KEY`. The default low-cost model is `gpt-5.6-luna`.
+```text
+run_windows.bat
+```
 
-## Tests
+The first launch installs Python packages and opens `http://127.0.0.1:8765`.
+
+## Validation
 
 ```powershell
 .\.venv\Scripts\python.exe -m ruff check .
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-## Draft-day fallback
-
-If Yahoo API access is not ready, import a current rankings CSV and enter picks in the manual box. The app assigns each pick to the correct snake slot and continues making roster-aware recommendations.
-
-See `docs/SUNDAY_CHECKLIST.md` before the draft.
+See `docs/SUNDAY_CHECKLIST.md` before draft day.

@@ -32,11 +32,12 @@ async def ai_review(
             {
                 "role": "system",
                 "content": (
-                    "You are an elite redraft fantasy-football draft analyst. "
-                    "Use the supplied live board, full-PPR roster construction, "
-                    "positional scarcity, and market value. Return exactly three "
-                    "player names in order, one per line. No explanation. Never "
-                    "name a drafted player."
+                    "You are an elite redraft and keeper fantasy-football draft analyst. "
+                    "Use the supplied live board, custom pick ownership, keepers, bonus or "
+                    "traded picks, time until the user's next pick, full-PPR roster "
+                    "construction, current player status, and the user's strategy. Return "
+                    "exactly three player names in order, one per line. No explanation. "
+                    "Never name a drafted or kept player."
                 ),
             },
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},

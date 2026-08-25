@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -19,11 +20,19 @@ from .models import DraftConfig, DraftPick, Player
 from .providers import enrich_with_sleeper, fetch_adp, fetch_sleeper_players
 from .rankings import canonical_name, load_custom_rankings, merge_rankings
 from .recommender import recommend
-from .snake import next_pick_for_slot, picks_until_turn, slot_for_pick
+from .rules import build_strategy, keeper_text, parse_custom_order, parse_keepers
+from .snake import next_pick_for_slot, picks_until_turn, slot_for_pick, total_picks
 from .state import ManualDraftStore
 from .yahoo import YahooClient, YahooError
 
-app = FastAPI(title="Live Draft Assistant", version="0.2.0")
+app = FastAPI(title="Live Draft Assistant", version="0.3.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"chrome-extension://.*",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "app" / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "app" / "templates")
 
@@ -67,6 +76,17 @@ class ConfigPayload(BaseModel):
     scoring: str = "ppr"
     team_id: int = Field(ge=1, le=50)
     league_id: str
+
+
+class RulesPayload(BaseModel):
+    keeper_league: bool = False
+    custom_order_text: str = ""
+    keepers_text: str = ""
+    strategy_notes: str = ""
+    preferred_players: str = ""
+    avoid_players: str = ""
+    qb_earliest_round: int = Field(default=6, ge=1, le=40)
+    te_earliest_round: int = Field(default=5, ge=1, le=40)
 
 
 class PickPayload(BaseModel):
@@ -160,6 +180,53 @@ async def update_config(payload: ConfigPayload) -> dict[str, Any]:
     return {"ok": True, "config": config.to_dict()}
 
 
+@app.get("/api/rules")
+async def get_rules() -> dict[str, Any]:
+    config, _ = store.load()
+    strategy = config.strategy or {}
+    return {
+        "keeper_league": config.keeper_league,
+        "custom_order_text": ",".join(str(owner) for owner in config.custom_pick_order),
+        "keepers_text": keeper_text(config.keepers),
+        "strategy_notes": str(strategy.get("notes", "")),
+        "preferred_players": ", ".join(strategy.get("preferred_players", [])),
+        "avoid_players": ", ".join(strategy.get("avoid_players", [])),
+        "qb_earliest_round": int(strategy.get("qb_earliest_round", 6)),
+        "te_earliest_round": int(strategy.get("te_earliest_round", 5)),
+        "custom_pick_count": len(config.custom_pick_order),
+        "keeper_count": len(config.keepers),
+    }
+
+
+@app.post("/api/rules")
+async def update_rules(payload: RulesPayload) -> dict[str, Any]:
+    config, _ = store.load()
+    try:
+        order = parse_custom_order(payload.custom_order_text, config.teams)
+        keepers = parse_keepers(payload.keepers_text, config.teams)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    config.keeper_league = payload.keeper_league or bool(keepers)
+    config.custom_pick_order = order
+    config.keepers = keepers
+    config.strategy = build_strategy(
+        existing=config.strategy,
+        notes=payload.strategy_notes,
+        preferred_players=[payload.preferred_players],
+        avoid_players=[payload.avoid_players],
+        qb_earliest_round=payload.qb_earliest_round,
+        te_earliest_round=payload.te_earliest_round,
+    )
+    store.update_config(config)
+    return {
+        "ok": True,
+        "custom_pick_count": len(order),
+        "keeper_count": len(keepers),
+        "strategy": config.strategy,
+    }
+
+
 @app.post("/api/refresh")
 async def refresh(force: bool = True) -> dict[str, Any]:
     await refresh_sources(force=force)
@@ -173,13 +240,20 @@ async def manual_pick(payload: PickPayload) -> dict[str, Any]:
     player_name = payload.player_name.strip()
     if not player_name:
         raise HTTPException(status_code=400, detail="Player name is required")
-    if len(picks) >= config.teams * config.rounds:
+    draft_size = total_picks(config.teams, config.rounds, config.custom_pick_order)
+    if len(picks) >= draft_size:
         raise HTTPException(status_code=400, detail="The configured draft is already complete")
     if any(canonical_name(pick.player_name) == canonical_name(player_name) for pick in picks):
         raise HTTPException(status_code=400, detail=f"{player_name} is already on the draft board")
+    if any(
+        canonical_name(str(keeper.get("player_name", ""))) == canonical_name(player_name)
+        for keeper in config.keepers
+    ):
+        raise HTTPException(status_code=400, detail=f"{player_name} is already kept")
 
     overall_pick = len(picks) + 1
-    slot = payload.team_slot or slot_for_pick(overall_pick, config.teams)
+    default_slot = slot_for_pick(overall_pick, config.teams, config.custom_pick_order)
+    slot = payload.team_slot or default_slot
     if not 1 <= slot <= config.teams:
         raise HTTPException(status_code=400, detail="Team slot is outside the league size")
 
@@ -222,7 +296,8 @@ async def delete_manual_pick(overall_pick: int) -> dict[str, Any]:
         pick.pick = index
         pick.round = (index - 1) // config.teams + 1
         if pick.team_key.startswith("manual.t."):
-            pick.team_key = f"manual.t.{slot_for_pick(index, config.teams)}"
+            owner = slot_for_pick(index, config.teams, config.custom_pick_order)
+            pick.team_key = f"manual.t.{owner}"
     store.save(config, picks)
     RUNTIME_CACHE["last_refresh"] = time.time()
     return {"ok": True}
@@ -280,7 +355,15 @@ async def draft_state() -> dict[str, Any]:
 
     available = combined_player_pool(yahoo_available=yahoo_available)
     drafted_names = {canonical_name(pick.player_name) for pick in picks if pick.player_name}
-    available = [player for player in available if canonical_name(player.name) not in drafted_names]
+    keeper_names = {
+        canonical_name(str(keeper.get("player_name", "")))
+        for keeper in config.keepers
+        if keeper.get("player_name")
+    }
+    unavailable_names = drafted_names | keeper_names
+    available = [
+        player for player in available if canonical_name(player.name) not in unavailable_names
+    ]
 
     team_suffix = f".t.{config.team_id}"
     my_picks = [pick for pick in picks if pick.team_key.endswith(team_suffix)]
@@ -288,16 +371,35 @@ async def draft_state() -> dict[str, Any]:
         manual_key = f"manual.t.{config.slot}"
         my_picks = [pick for pick in picks if pick.team_key == manual_key]
 
-    roster = [
-        Player(
+    roster_by_name: dict[str, Player] = {}
+    for keeper in config.keepers:
+        if int(keeper.get("owner_slot", 0)) != config.slot:
+            continue
+        name = str(keeper.get("player_name", "")).strip()
+        if not name:
+            continue
+        matched = find_cached_player(name)
+        player = Player(
+            name=matched.name if matched else name,
+            position=str(keeper.get("position") or (matched.position if matched else "")),
+            team=str(keeper.get("nfl_team") or (matched.team if matched else "FA")),
+            yahoo_id=matched.yahoo_id if matched else None,
+            source="Keeper",
+        )
+        roster_by_name[canonical_name(player.name)] = player
+
+    for pick in my_picks:
+        if not pick.player_name:
+            continue
+        player = Player(
             name=pick.player_name,
             position=pick.position,
             team=pick.nfl_team,
             yahoo_id=pick.player_id,
         )
-        for pick in my_picks
-        if pick.player_name
-    ]
+        roster_by_name[canonical_name(player.name)] = player
+    roster = list(roster_by_name.values())
+
     next_overall = len(picks) + 1
     ranked_available = recommend(
         available,
@@ -305,12 +407,30 @@ async def draft_state() -> dict[str, Any]:
         overall_pick=next_overall,
         teams=config.teams,
         roster_slots=config.roster_slots,
+        strategy=config.strategy,
         limit=80,
     )
-    next_mine = next_pick_for_slot(len(picks), config.slot, config.teams, config.rounds)
-    until_turn = picks_until_turn(len(picks), config.slot, config.teams, config.rounds)
-    draft_complete = len(picks) >= config.teams * config.rounds
-    current_slot = None if draft_complete else slot_for_pick(next_overall, config.teams)
+    next_mine = next_pick_for_slot(
+        len(picks),
+        config.slot,
+        config.teams,
+        config.rounds,
+        config.custom_pick_order,
+    )
+    until_turn = picks_until_turn(
+        len(picks),
+        config.slot,
+        config.teams,
+        config.rounds,
+        config.custom_pick_order,
+    )
+    draft_size = total_picks(config.teams, config.rounds, config.custom_pick_order)
+    draft_complete = len(picks) >= draft_size
+    current_slot = (
+        None
+        if draft_complete
+        else slot_for_pick(next_overall, config.teams, config.custom_pick_order)
+    )
 
     prompt = build_chatgpt_prompt(
         config=config,
@@ -319,6 +439,7 @@ async def draft_state() -> dict[str, Any]:
         recommendations=ranked_available,
         next_overall=next_overall,
         next_mine=next_mine,
+        until_turn=until_turn,
     )
 
     return {
@@ -326,12 +447,20 @@ async def draft_state() -> dict[str, Any]:
         "config": config.to_dict(),
         "draft": {
             "completed": len(picks),
+            "total": draft_size,
             "complete": draft_complete,
             "next_overall": None if draft_complete else next_overall,
             "current_slot": current_slot,
             "is_my_turn": current_slot == config.slot,
             "next_my_pick": next_mine,
             "picks_until_turn": until_turn,
+            "custom_order": bool(config.custom_pick_order),
+        },
+        "special_rules": {
+            "keeper_league": config.keeper_league,
+            "keeper_count": len(config.keepers),
+            "custom_pick_count": len(config.custom_pick_order),
+            "strategy_name": config.strategy.get("name", "Custom"),
         },
         "recommendations": [player.to_dict() for player in ranked_available[:3]],
         "available": [player.to_dict() for player in ranked_available[:50]],
@@ -346,6 +475,7 @@ async def draft_state() -> dict[str, Any]:
             "Yahoo Fantasy Sports API",
             "Fantasy Football Calculator ADP",
             "Sleeper player metadata",
+            "Your keeper, pick-trade, and strategy rules",
         ],
     }
 
@@ -359,7 +489,11 @@ async def run_ai_review() -> dict[str, str]:
         answer = await ai_review(
             api_key=settings.openai_api_key,
             model=settings.openai_model,
-            league_context={"config": state["config"], "draft": state["draft"]},
+            league_context={
+                "config": state["config"],
+                "draft": state["draft"],
+                "special_rules": state["special_rules"],
+            },
             roster=roster,
             candidates=candidates,
         )
@@ -469,6 +603,7 @@ def build_chatgpt_prompt(
     recommendations: list[Player],
     next_overall: int,
     next_mine: int | None,
+    until_turn: int | None,
 ) -> str:
     roster_text = ", ".join(f"{player.name} ({player.position})" for player in roster) or "None"
     recent_text = ", ".join(
@@ -482,6 +617,18 @@ def build_chatgpt_prompt(
         )
         for player in recommendations[:12]
     )
+    keeper_text_value = ", ".join(
+        f"{keeper.get('player_name')}->slot {keeper.get('owner_slot')}"
+        for keeper in config.keepers
+    ) or "None"
+    custom_order_context = (
+        ",".join(
+            str(owner)
+            for owner in config.custom_pick_order[next_overall - 1 : next_overall + 19]
+        )
+        if config.custom_pick_order
+        else "normal snake"
+    )
     scoring_label = {
         "ppr": "full PPR",
         "half-ppr": "half PPR",
@@ -490,14 +637,21 @@ def build_chatgpt_prompt(
     timestamp = datetime.now(UTC).isoformat(timespec="seconds")
     return (
         f"Live Yahoo fantasy draft as of {timestamp}. "
-        f"{config.teams}-team {scoring_label} snake, my slot is {config.slot}. "
-        f"Next overall pick is {next_overall}; my next pick is {next_mine}. "
+        f"{config.teams}-team {scoring_label}; my normal slot is {config.slot}. "
+        f"This is a keeper league: {config.keeper_league}. "
+        f"Next overall pick is {next_overall}; my next owned pick is {next_mine}; "
+        f"{until_turn} picks are before me. "
+        f"Future pick owners from here: {custom_order_context}. "
+        f"Keepers: {keeper_text_value}. "
+        f"My strategy: {config.strategy.get('notes', '')}. "
+        f"My targets: {config.strategy.get('preferred_players', [])}. "
+        f"My avoids: {config.strategy.get('avoid_players', [])}. "
         f"My roster: {roster_text}. Recent picks: {recent_text}. "
         f"Best available: {available_text}. "
-        "Use current injury, suspension, depth-chart, and role news when it "
-        "materially changes the pick. "
-        "Return exactly the best 3 player names in order. No explanation. "
-        "Do not include anyone already drafted."
+        "Account for keepers, traded picks, bonus picks, how long until my next pick, "
+        "current injury/suspension/depth-chart news, PPR value, positional scarcity, "
+        "and my roster construction. Return exactly the best 3 player names in order. "
+        "No explanation. Do not include anyone already drafted or kept."
     )
 
 

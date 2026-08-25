@@ -1,6 +1,7 @@
 const pollMs = Number(document.body.dataset.pollSeconds || 5) * 1000;
 let latestState = null;
 let configHydrated = false;
+let rulesHydrated = false;
 let wasMyTurn = false;
 
 const $ = (id) => document.getElementById(id);
@@ -40,9 +41,26 @@ async function request(url, options = {}) {
   return data;
 }
 
+function keeperLines(keepers) {
+  return (keepers || []).map((item) => [
+    item.player_name || "",
+    item.owner_slot || "",
+    item.position || "",
+    item.nfl_team || "",
+    item.note || "",
+  ].join(" | ").replace(/( \| )+$/g, "")).join("\n");
+}
+
 function render(state) {
   latestState = state;
   $("mode-pill").textContent = state.mode === "yahoo-live" ? "Yahoo live" : "Manual backup";
+  const special = state.special_rules || {};
+  const ruleParts = [];
+  if (special.keeper_league) ruleParts.push(`${special.keeper_count} keepers`);
+  if (special.custom_pick_count) ruleParts.push(`${special.custom_pick_count} custom picks`);
+  $("rules-pill").textContent = ruleParts.length ? ruleParts.join(" · ") : "Standard rules";
+  $("rule-summary").textContent = ruleParts.length ? ruleParts.join(" · ") : "Normal snake";
+
   const turn = state.draft.is_my_turn;
   if (turn && !wasMyTurn) turnAlert();
   wasMyTurn = turn;
@@ -51,15 +69,15 @@ function render(state) {
     ? "DRAFT COMPLETE"
     : turn
       ? "YOU ARE ON THE CLOCK"
-      : `Slot ${state.draft.current_slot} is picking`;
+      : `Owner slot ${state.draft.current_slot} is picking`;
   $("turn-pill").classList.toggle("my-turn", turn);
   $("next-pick").textContent = state.draft.next_overall ?? "✓";
   $("turn-detail").textContent = state.draft.complete
     ? "Your roster is complete."
     : turn
       ? "Pick now. Use the first name unless late news changes it."
-      : `Your next turn is pick ${state.draft.next_my_pick ?? "—"}.`;
-  $("completed-picks").textContent = state.draft.completed;
+      : `Your next owned pick is ${state.draft.next_my_pick ?? "—"}.`;
+  $("completed-picks").textContent = `${state.draft.completed}/${state.draft.total ?? "—"}`;
   $("until-turn").textContent = state.draft.picks_until_turn ?? "—";
   $("next-my-pick").textContent = state.draft.next_my_pick ?? "—";
 
@@ -76,7 +94,7 @@ function render(state) {
   $("roster").innerHTML = state.roster.length
     ? state.roster.map((player) => `
       <div class="list-row"><span class="position">${escapeHtml(player.position || "?")}</span><strong>${escapeHtml(player.name)}</strong><span class="meta">${escapeHtml(player.team || "")}</span></div>`).join("")
-    : '<p class="helper">No players drafted yet.</p>';
+    : '<p class="helper">No players rostered yet.</p>';
 
   $("recent-picks").innerHTML = state.recent_picks.length
     ? state.recent_picks.map((pick) => `
@@ -102,6 +120,20 @@ function render(state) {
     $("league-id").value = cfg.league_id;
     $("scoring").value = cfg.scoring;
     configHydrated = true;
+  }
+
+  if (!rulesHydrated) {
+    const cfg = state.config;
+    const strategy = cfg.strategy || {};
+    $("keeper-league").checked = Boolean(cfg.keeper_league);
+    $("custom-order").value = (cfg.custom_pick_order || []).join(",");
+    $("keepers-text").value = keeperLines(cfg.keepers);
+    $("strategy-notes").value = strategy.notes || "";
+    $("preferred-players").value = (strategy.preferred_players || []).join(", ");
+    $("avoid-players").value = (strategy.avoid_players || []).join(", ");
+    $("qb-earliest-round").value = strategy.qb_earliest_round || 6;
+    $("te-earliest-round").value = strategy.te_earliest_round || 5;
+    rulesHydrated = true;
   }
 }
 
@@ -199,6 +231,31 @@ $("config-form").addEventListener("submit", async (event) => {
     });
     configHydrated = false;
     toast("League setup saved");
+    await refreshState();
+  } catch (error) {
+    toast(error.message);
+  }
+});
+
+$("rules-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    const result = await request("/api/rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keeper_league: $("keeper-league").checked,
+        custom_order_text: $("custom-order").value,
+        keepers_text: $("keepers-text").value,
+        strategy_notes: $("strategy-notes").value,
+        preferred_players: $("preferred-players").value,
+        avoid_players: $("avoid-players").value,
+        qb_earliest_round: Number($("qb-earliest-round").value || 6),
+        te_earliest_round: Number($("te-earliest-round").value || 5),
+      }),
+    });
+    rulesHydrated = false;
+    toast(`${result.keeper_count} keepers and ${result.custom_pick_count || "snake"} picks saved`);
     await refreshState();
   } catch (error) {
     toast(error.message);

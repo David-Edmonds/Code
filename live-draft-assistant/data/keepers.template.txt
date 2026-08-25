@@ -1,0 +1,2 @@
+# Player | owner slot | position | NFL team | note
+CeeDee Lamb | 7 | WR | DAL | example only
