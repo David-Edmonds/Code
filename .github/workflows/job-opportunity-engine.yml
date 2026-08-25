@@ -1,0 +1,50 @@
+name: Job Opportunity Engine checks
+
+on:
+  pull_request:
+    paths:
+      - "apps/job-opportunity-engine/**"
+      - ".github/workflows/job-opportunity-engine.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/job-opportunity-engine/**"
+      - ".github/workflows/job-opportunity-engine.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: job-engine-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Compile source
+        run: python -m compileall -q apps/job-opportunity-engine/job_engine.py
+
+      - name: Run unit tests
+        env:
+          PYTHONPATH: apps/job-opportunity-engine
+        run: python -m unittest discover -s apps/job-opportunity-engine/tests -v
+
+      - name: Run synthetic scoring demo
+        run: |
+          python apps/job-opportunity-engine/job_engine.py \
+            --profile apps/job-opportunity-engine/profile.json \
+            --input apps/job-opportunity-engine/examples/sample_jobs.json \
+            --output /tmp/job-results.json \
+            --csv /tmp/job-results.csv
+          test -s /tmp/job-results.json
+          test -s /tmp/job-results.csv
