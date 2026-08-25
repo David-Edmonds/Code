@@ -8,7 +8,7 @@ This repository is **not** a place for passwords, private family information, cl
 
 | Project | Purpose | Current stage | Next release |
 |---|---|---|---|
-| David Analytics Lab | Portfolio, analytics tools, verified Confia role, and professional proof | Portfolio pull request #1 open | Review checks, merge, regenerate the site, and publish the improved resume |
+| David Analytics Lab | Portfolio, analytics tools, verified Confia role, and professional proof | Source foundation merged | Regenerate and publish the GitHub Pages site, replace the resume PDF, and verify the live release |
 | Social Content OS | One workflow for grow_goodness, CultureRankHQ, and future brands | Blueprint | Validate Airtable + Buffer data flow |
 | Job Opportunity Engine | Find, score, prepare, and track high-fit remote analytics roles | Blueprint | Define scoring rules and data sources |
 
