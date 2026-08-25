@@ -1,0 +1,81 @@
+name: Job Opportunity Airtable export checks
+
+on:
+  pull_request:
+    paths:
+      - "apps/job-opportunity-engine/**"
+      - ".github/workflows/job-opportunity-airtable-export.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/job-opportunity-engine/**"
+      - ".github/workflows/job-opportunity-airtable-export.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: job-airtable-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Compile source
+        run: |
+          python -m compileall -q \
+            apps/job-opportunity-engine/job_engine.py \
+            apps/job-opportunity-engine/airtable_export.py
+
+      - name: Run all Job Opportunity Engine tests
+        env:
+          PYTHONPATH: apps/job-opportunity-engine
+        run: python -m unittest discover -s apps/job-opportunity-engine/tests -v
+
+      - name: Build synthetic scored results
+        run: |
+          python apps/job-opportunity-engine/job_engine.py \
+            --profile apps/job-opportunity-engine/profile.json \
+            --input apps/job-opportunity-engine/examples/sample_jobs.json \
+            --output /tmp/job-results.json \
+            --csv /tmp/job-results.csv
+
+      - name: Build Airtable import CSV
+        run: |
+          python apps/job-opportunity-engine/airtable_export.py \
+            --jobs apps/job-opportunity-engine/examples/sample_jobs.json \
+            --results /tmp/job-results.json \
+            --output /tmp/airtable-import.csv \
+            --engine-version job-opportunity-engine-v1 \
+            --scored-at 2026-08-24T23:59:00Z
+          test -s /tmp/airtable-import.csv
+
+      - name: Validate Airtable headers and rows
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+
+          path = Path('/tmp/airtable-import.csv')
+          rows = list(csv.DictReader(path.open(encoding='utf-8-sig')))
+          required = {
+              'ID', 'Company', 'Job Title', 'Fit Score', 'Fit Tier',
+              'Review Decision', 'Requires U.S. Residence',
+              'Review Flags', 'Engine Version', 'Last Scored'
+          }
+          assert len(rows) == 5, len(rows)
+          assert required.issubset(rows[0]), rows[0].keys()
+          assert rows[0]['Fit Tier'] == 'Strong Fit'
+          assert rows[0]['Review Decision'] == 'Unreviewed'
+          assert any(row['Fit Tier'] == 'Blocked' for row in rows)
+          PY
