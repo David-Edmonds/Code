@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Draft Widget</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">DAVID'S DRAFT ROOM</p>
+      <h1>Pick Assistant</h1>
+    </div>
+    <span id="mode" class="pill">Connecting</span>
+  </header>
+
+  <section id="turn-card" class="turn-card">
+    <p class="eyebrow">NEXT PICK</p>
+    <div class="turn-row">
+      <strong id="next-pick">–</strong>
+      <div><span id="turn-status">Checking board</span><small id="next-mine"></small></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-heading"><h2>Best three</h2><button id="refresh">Refresh</button></div>
+    <div id="recommendations" class="recommendations"></div>
+  </section>
+
+  <section>
+    <div class="section-heading"><h2>Your roster</h2><span id="special" class="small"></span></div>
+    <div id="roster" class="roster"></div>
+  </section>
+
+  <section class="actions">
+    <button id="copy" class="primary">Copy for ChatGPT</button>
+    <button id="open-dashboard">Full dashboard</button>
+  </section>
+
+  <p id="error" class="error"></p>
+  <p class="footer">Keep the local assistant running while drafting.</p>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

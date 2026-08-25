@@ -1,39 +1,38 @@
-# Sunday, August 30, 2026 Draft Checklist
+# Sunday Draft Checklist
 
-## Complete before Sunday
+## Before draft day
 
-- [ ] Download or clone the project and run `run_windows.bat` once so Python packages install before draft day.
-- [ ] Open `.env` and add the Yahoo Client ID and Client Secret if Yahoo grants API access.
-- [ ] Confirm the Yahoo app callback is exactly `http://127.0.0.1:8765/auth/callback`.
-- [ ] Start the dashboard and set 10 teams, your actual draft slot, full PPR, team ID 10, and league ID 810161.
-- [ ] Click **Connect Yahoo** and confirm the top status says **Yahoo live**.
-- [ ] Import a fresh full-PPR rankings CSV on draft day when you have one. The app also uses Yahoo rank and current ADP.
-- [ ] Click **Refresh** and verify player status information appears.
-- [ ] Run a Yahoo mock draft or enter at least five manual picks to practice the workflow.
+- [ ] Run `run_windows.bat` once.
+- [ ] Confirm 10 teams, full PPR, league ID `810161`, and Yahoo team ID `10`.
+- [ ] Enter your actual normal draft slot when Yahoo posts it.
+- [ ] Get the league's complete keeper list.
+- [ ] Get the complete pick-owner order, including traded and bonus picks.
+- [ ] Paste the owner sequence into **Custom pick owners**.
+- [ ] Paste the keeper list into **Keepers**.
+- [ ] Review your strategy notes, targets, avoids, and QB/TE timing.
+- [ ] Save the custom rules.
+- [ ] Install the `extension` folder through `chrome://extensions` → **Load unpacked**.
+- [ ] Practice with at least five manual picks and use **Undo last**.
 
 ## Thirty minutes before the draft
 
-- [ ] Restart the dashboard.
-- [ ] Confirm your final draft slot and Yahoo roster settings.
+- [ ] Start `run_windows.bat`.
+- [ ] Open Yahoo's draft room.
+- [ ] Click the **David's Live Draft Widget** extension icon.
+- [ ] Confirm the widget shows the keeper count and custom pick count.
+- [ ] Confirm your next owned pick matches the official league board.
 - [ ] Click **Refresh**.
-- [ ] Keep Yahoo's draft room and the dashboard side by side.
-- [ ] Keep this ChatGPT conversation open in another tab.
-- [ ] Make sure the manual box and **Undo last** button work even when Yahoo live syncing is connected.
+- [ ] Keep this ChatGPT conversation open.
 
 ## During the draft
 
-- Use the dashboard's first recommendation as the fast default.
-- Use **Copy for ChatGPT** when the top choices are close, surprising, or affected by recent news.
-- Paste the copied context here. ChatGPT is instructed to return exactly three names with no explanation.
-- Do not wait on an AI response when the clock is nearly expired.
-- If Yahoo syncing stops, enter each new pick in **Manual backup**. You only need the player name; position and NFL team are filled from the ranking data when possible.
-- Use **Undo last** immediately after a typo.
+- Use the widget's first name as the fast default.
+- Use **Copy for ChatGPT** when the top choices are close or surprising.
+- Paste the copied context here; the response should be only the best three names.
+- If Yahoo syncing fails, type every selected player into Manual Backup.
+- The manual tracker follows the custom owner order, not a normal snake.
+- Do not wait on an AI answer when the clock is almost over.
 
-## Rules built into the app
+## Important keeper rule
 
-- Avoid kicker and defense until the closing rounds.
-- Avoid a second quarterback in a normal one-QB build unless late value is extreme.
-- Prioritize RB/WR roster construction through the early and middle rounds.
-- Penalize Out, IR, PUP, and suspended players.
-- Reward players falling beyond current ADP.
-- Alert visually and audibly when your slot is on the clock.
+Keepers are removed from the available pool and added to rosters. The custom owner sequence must match Yahoo's real draft order, including how the league treats any pick spent on a keeper.

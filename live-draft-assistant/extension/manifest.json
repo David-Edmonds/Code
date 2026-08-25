@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "David's Live Draft Widget",
+  "version": "0.3.0",
+  "description": "A keeper-aware Yahoo fantasy draft side panel powered by the local Live Draft Assistant.",
+  "permissions": [
+    "sidePanel",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*",
+    "https://football.fantasysports.yahoo.com/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Open Live Draft Widget"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

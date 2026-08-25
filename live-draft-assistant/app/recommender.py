@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from math import inf
+from typing import Any
 
 from .models import Player
 from .rankings import canonical_name
@@ -43,7 +44,11 @@ def blended_rank(player: Player) -> float:
 
 
 def _need_adjustment(
-    position: str, counts: Counter[str], round_number: int, superflex: bool
+    position: str,
+    counts: Counter[str],
+    round_number: int,
+    superflex: bool,
+    strategy: dict[str, Any],
 ) -> float:
     adjustment = 0.0
     if position in {"RB", "WR"}:
@@ -54,21 +59,21 @@ def _need_adjustment(
         elif counts[position] >= 5:
             adjustment += 7.0
     elif position == "QB":
+        earliest = int(strategy.get("qb_earliest_round", 6))
         if superflex:
             if counts["QB"] == 0:
                 adjustment -= 7.0
             elif counts["QB"] == 1 and round_number <= 8:
                 adjustment -= 3.0
         else:
-            if round_number <= 3:
+            if round_number < earliest:
                 adjustment += 16.0
-            elif round_number <= 5:
-                adjustment += 7.0
             if counts["QB"] >= 1:
                 adjustment += 18.0
     elif position == "TE":
-        if round_number <= 2:
-            adjustment += 6.0
+        earliest = int(strategy.get("te_earliest_round", 5))
+        if round_number < earliest:
+            adjustment += 8.0
         if counts["TE"] >= 1:
             adjustment += 14.0
     elif position in {"K", "DEF"}:
@@ -86,19 +91,28 @@ def recommend(
     overall_pick: int,
     teams: int,
     roster_slots: dict[str, int] | None = None,
+    strategy: dict[str, Any] | None = None,
     limit: int = 12,
 ) -> list[Player]:
     if overall_pick < 1:
         overall_pick = 1
+    strategy = strategy or {}
     round_number = (overall_pick - 1) // teams + 1
     counts = roster_counts(roster)
     roster_slots = roster_slots or {}
     superflex = any(key.upper() in {"Q/W/R/T", "SUPERFLEX", "SF"} for key in roster_slots)
     drafted_names = {canonical_name(player.name) for player in roster}
+    preferred = {
+        canonical_name(name) for name in strategy.get("preferred_players", []) if name
+    }
+    avoided = {canonical_name(name) for name in strategy.get("avoid_players", []) if name}
+    preferred_bonus = float(strategy.get("preferred_bonus", 8.0))
+    avoid_penalty = float(strategy.get("avoid_penalty", 100.0))
 
     ranked: list[Player] = []
     for player in available:
-        if canonical_name(player.name) in drafted_names:
+        player_key = canonical_name(player.name)
+        if player_key in drafted_names:
             continue
         position = primary_position(player.position)
         if position not in SKILL_POSITIONS | {"K", "DEF"}:
@@ -106,7 +120,14 @@ def recommend(
         base = blended_rank(player)
         if base == inf:
             continue
-        score = base + _need_adjustment(position, counts, round_number, superflex)
+        score = base + _need_adjustment(
+            position, counts, round_number, superflex, strategy
+        )
+
+        if player_key in preferred:
+            score -= preferred_bonus
+        if player_key in avoided:
+            score += avoid_penalty
 
         status = (player.injury_status or "").upper()
         if any(blocked in status for blocked in INJURY_BLOCK):
@@ -114,7 +135,6 @@ def recommend(
         elif status in {"Q", "QUESTIONABLE", "DOUBTFUL"}:
             score += 2.5
 
-        # Roster-shape guardrails for a standard one-flex PPR build.
         if round_number <= 7:
             if counts["RB"] + counts["WR"] < round_number - 1 and position not in {"RB", "WR"}:
                 score += 7.0
@@ -123,12 +143,11 @@ def recommend(
             if position == "WR" and counts["WR"] < 3:
                 score -= 1.5
 
-        # Small value reward when a player has fallen well beyond market ADP.
         if player.adp is not None and overall_pick > player.adp + 8:
             score -= min(5.0, (overall_pick - player.adp) / 6)
 
         player.score = round(score, 2)
-        player.reason = _reason(player, counts, round_number, overall_pick)
+        player.reason = _reason(player, counts, round_number, overall_pick, preferred, avoided)
         ranked.append(player)
 
     ranked.sort(
@@ -140,7 +159,19 @@ def recommend(
     return ranked[:limit]
 
 
-def _reason(player: Player, counts: Counter[str], round_number: int, overall_pick: int) -> str:
+def _reason(
+    player: Player,
+    counts: Counter[str],
+    round_number: int,
+    overall_pick: int,
+    preferred: set[str],
+    avoided: set[str],
+) -> str:
+    key = canonical_name(player.name)
+    if key in preferred:
+        return "your target"
+    if key in avoided:
+        return "your avoid list"
     position = primary_position(player.position)
     if player.adp is not None and overall_pick >= player.adp + 10:
         return "value fall"

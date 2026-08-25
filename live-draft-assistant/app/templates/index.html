@@ -14,6 +14,7 @@
     </div>
     <div class="status-group">
       <span id="mode-pill" class="pill">Loading</span>
+      <span id="rules-pill" class="pill muted">Standard rules</span>
       <span id="turn-pill" class="pill muted">Checking turn</span>
     </div>
   </header>
@@ -76,7 +77,7 @@
           </div>
           <div class="button-row"><button type="submit">Add next pick</button><button id="undo-button" type="button" class="secondary">Undo last</button></div>
         </form>
-        <p class="helper">Use this only if Yahoo authorization is unavailable. Picks are assigned automatically in snake order.</p>
+        <p class="helper">If Yahoo sync stops, enter each selected player here. The custom pick owner is assigned automatically.</p>
       </article>
 
       <article class="panel settings-panel">
@@ -86,9 +87,9 @@
         <form id="config-form">
           <div class="two-column">
             <label>Teams<input id="teams" type="number" min="4" max="20"></label>
-            <label>Your slot<input id="slot" type="number" min="1" max="20"></label>
+            <label>Your normal slot<input id="slot" type="number" min="1" max="20"></label>
             <label>Rounds<input id="rounds" type="number" min="1" max="40"></label>
-            <label>Team ID<input id="team-id" type="number" min="1"></label>
+            <label>Yahoo team ID<input id="team-id" type="number" min="1"></label>
           </div>
           <label>Yahoo league ID<input id="league-id"></label>
           <label>Scoring<select id="scoring"><option value="ppr">Full PPR</option><option value="half-ppr">Half PPR</option><option value="standard">Standard</option></select></label>
@@ -98,6 +99,36 @@
           <a id="yahoo-connect" class="button-link" href="/auth/yahoo">Connect Yahoo</a>
           <label class="file-button">Import rankings CSV<input id="rankings-file" type="file" accept=".csv"></label>
         </div>
+      </article>
+
+      <article class="panel rules-panel wide-panel">
+        <div class="panel-title-row">
+          <div><p class="eyebrow">YOUR LEAGUE</p><h2>Keepers, traded picks, and your style</h2></div>
+          <span id="rule-summary" class="pill muted">Not configured</span>
+        </div>
+        <form id="rules-form">
+          <label class="checkbox-label"><input id="keeper-league" type="checkbox"> This is a keeper league</label>
+          <label>
+            Custom pick owners
+            <textarea id="custom-order" rows="4" placeholder="One owner slot per pick: 1,2,3,4... Repeat a slot for bonus picks or put the new owner where a pick was traded."></textarea>
+          </label>
+          <p class="helper">Leave blank for a normal snake. This can contain any number of picks, so extra and traded picks are supported.</p>
+          <label>
+            Keepers
+            <textarea id="keepers-text" rows="4" placeholder="One per line: Player | owner slot | position | NFL team | note&#10;CeeDee Lamb | 7 | WR | DAL | costs Round 3"></textarea>
+          </label>
+          <label>
+            How I draft
+            <textarea id="strategy-notes" rows="3" placeholder="Play to win, prioritize PPR volume and upside, wait on replaceable QB/TE options..."></textarea>
+          </label>
+          <div class="two-column">
+            <label>My target players<input id="preferred-players" placeholder="Player A, Player B"></label>
+            <label>Players to avoid<input id="avoid-players" placeholder="Player C, Player D"></label>
+            <label>QB earliest round<input id="qb-earliest-round" type="number" min="1" max="40"></label>
+            <label>TE earliest round<input id="te-earliest-round" type="number" min="1" max="40"></label>
+          </div>
+          <button type="submit">Save custom league rules</button>
+        </form>
       </article>
     </section>
 
@@ -113,7 +144,7 @@
         </table>
       </div>
       <p id="errors" class="errors"></p>
-      <p class="attribution">Data attribution: Yahoo Fantasy Sports API, Fantasy Football Calculator, and Sleeper.</p>
+      <p class="attribution">Yahoo live board + current market data + your keepers, pick ownership, and strategy.</p>
     </section>
   </main>
 
