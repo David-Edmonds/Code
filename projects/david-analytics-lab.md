@@ -19,7 +19,7 @@ A static portfolio shows screenshots but does not prove that David can frame a p
 
 ## Current status
 
-Portfolio pull request #1 is open as a draft. The source update is ready for GitHub quality checks and final truth/privacy review. After merge, the generated `docs/` export and improved resume PDF must be published and verified separately.
+Portfolio pull request #1 passed lint, build, and rendered-page tests and was merged on August 24, 2026. The source foundation is complete. The release is still pending regeneration of the generated `docs/` GitHub Pages export, publication of the improved resume PDF, and live-site verification.
 
 ## Success signals
 
@@ -27,4 +27,5 @@ Portfolio pull request #1 is open as a draft. The source update is ready for Git
 - The site works on phone and desktop.
 - The CSV checker makes no network request.
 - Pull requests fail when critical portfolio/privacy expectations regress.
+- The generated public site matches the reviewed source.
 - A reviewer can understand David's value in under two minutes.
