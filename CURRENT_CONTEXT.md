@@ -28,19 +28,22 @@ Do not describe the role as full-time or identify end clients unless David expli
 ## Current progress
 
 - The Codex/GitHub app is authorized for the portfolio and Code repositories.
-- Portfolio pull request #1, `Build Analytics Lab portfolio foundation`, is open as a draft.
-- The pull request preserves Confia, adds the browser-only CSV quality checker, and adds CI, tests, security guidance, Codex instructions, and roadmap documentation.
-- The improved Confia-inclusive resume PDF and Word file are prepared separately.
+- Portfolio pull request #1, `Build Analytics Lab portfolio foundation`, passed lint, build, and rendered-page tests and was merged on August 24, 2026.
+- The merged source preserves Confia, adds the browser-only CSV quality checker, and includes CI, tests, security guidance, Codex instructions, and roadmap documentation.
+- The generated `docs/` GitHub Pages export is still the prior release and must be regenerated from the merged source.
+- The improved Confia-inclusive resume PDF and Word file are prepared; the public PDF replacement is still pending.
+- Build Lab pull request #1 is being refreshed to reflect the merged portfolio status before merge.
 
 ## Current priorities
 
-1. Review the GitHub checks on portfolio pull request #1 and fix any failure.
-2. Merge the portfolio pull request only after checks and a final truth/privacy review pass.
-3. Regenerate the generated `docs/` GitHub Pages output through the established build workflow.
-4. Publish the improved resume PDF and verify the live site on desktop and mobile.
-5. Validate a job-opportunity workflow.
-6. Validate one Airtable-to-Buffer content workflow before building a custom Social Content OS.
+1. Add and validate a repeatable GitHub Pages export and publishing workflow.
+2. Publish the improved resume PDF through a reviewed repository change.
+3. Verify the live portfolio, tools, downloads, metadata, and links on desktop and mobile.
+4. Review production dependency vulnerabilities and apply safe upgrades without breaking the Vinext/Sites stack.
+5. Merge the refreshed Build Lab pull request.
+6. Validate a job-opportunity workflow.
+7. Validate one Airtable-to-Buffer content workflow before building a custom Social Content OS.
 
 ## Current review gate
 
-The public portfolio source update is prepared and under pull-request review. Publishing remains intentionally separate from source review so generated files and the binary resume can be verified before release.
+The portfolio source release is merged and verified. Public release remains gated on regenerating the static GitHub Pages output, publishing the corrected resume, and completing live-site verification.
