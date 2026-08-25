@@ -21,29 +21,39 @@ Do not describe the role as full-time or identify end clients unless David expli
 
 ## Active repositories
 
-- `David-Edmonds/David-Edmonds.github.io` - portfolio and David Analytics Lab.
+- `David-Edmonds/David-Edmonds.github.io` - live portfolio and David Analytics Lab.
 - `David-Edmonds/washington-ev-analytics` - Washington EV public-data project.
-- `David-Edmonds/Code` - public-safe AI Build Lab command center.
+- `David-Edmonds/Code` - public-safe AI Build Lab command center and app workspace.
 
-## Current progress
+## Completed foundation
 
-- The Codex/GitHub app is authorized for the portfolio and Code repositories.
-- Portfolio pull request #1, `Build Analytics Lab portfolio foundation`, passed lint, build, and rendered-page tests and was merged on August 24, 2026.
-- The merged source preserves Confia, adds the browser-only CSV quality checker, and includes CI, tests, security guidance, Codex instructions, and roadmap documentation.
-- The generated `docs/` GitHub Pages export is still the prior release and must be regenerated from the merged source.
-- The improved Confia-inclusive resume PDF and Word file are prepared; the public PDF replacement is still pending.
-- Build Lab pull request #1 is being refreshed to reflect the merged portfolio status before merge.
+- Portfolio foundation, Confia association, browser-only CSV quality checker, CI, privacy tests, and release automation are merged.
+- The generated GitHub Pages site is published and verified on the homepage, Analytics Lab, tools privacy language, links, and resume download.
+- The live resume is a clean two-page Confia-inclusive PDF. A separate polished Word/PDF edition is retained for direct applications.
+- The AI Build Lab command center, project registry, decision log, templates, and operating guardrails are merged.
+
+## Active build
+
+The Job Opportunity Engine MVP is on `feature/job-opportunity-engine-mvp`.
+
+It provides:
+
+- Deterministic 0-100 scoring for JSON or CSV job records.
+- Transparent component scores, reasons, blockers, and review flags.
+- Remote-only, compensation, title, skills, responsibility, authorization, and completeness checks.
+- Explicit review flags for U.S.-residence, state-residence, cross-border payroll, compensation, posting freshness, and active-clearance requirements.
+- Synthetic sample data, JSON/CSV exports, seven unit tests, and a GitHub Actions workflow.
+- No automatic applications, private account access, external API, paid service, or generative scoring.
 
 ## Current priorities
 
-1. Add and validate a repeatable GitHub Pages export and publishing workflow.
-2. Publish the improved resume PDF through a reviewed repository change.
-3. Verify the live portfolio, tools, downloads, metadata, and links on desktop and mobile.
-4. Review production dependency vulnerabilities and apply safe upgrades without breaking the Vinext/Sites stack.
-5. Merge the refreshed Build Lab pull request.
-6. Validate a job-opportunity workflow.
-7. Validate one Airtable-to-Buffer content workflow before building a custom Social Content OS.
+1. Run and review the Job Opportunity Engine pull-request checks.
+2. Merge the MVP only when its tests pass.
+3. Validate scoring against a small set of real job descriptions without committing private application data.
+4. Create a private Airtable or spreadsheet review queue after the scoring rules are validated.
+5. Add scheduled sourcing and exception-based notifications while keeping application submission manual.
+6. Validate one Airtable-to-Buffer content workflow before building a custom Social Content OS.
 
 ## Current review gate
 
-The portfolio source release is merged and verified. Public release remains gated on regenerating the static GitHub Pages output, publishing the corrected resume, and completing live-site verification.
+A high job score means that an opportunity is worth human review. It does not establish legal, payroll, tax, residency, employer-policy, clearance, or application eligibility. Those requirements remain explicit human checks.
