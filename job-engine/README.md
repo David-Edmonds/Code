@@ -19,10 +19,10 @@ This folder documents the product design, public-safe scoring framework, synthet
 
 ## Hard gates
 
-- Remote eligibility must be compatible with a U.S. citizen applying for U.S. remote work while temporarily abroad.
+- A remote label is not enough by itself; physical-work-location, payroll, tax, employer-policy, clearance, travel, timezone, residency, and sponsorship requirements must be confirmed rather than assumed.
 - The role must be relevant to data analytics, BI, operations analytics, sales operations analytics, reporting, or a closely related area.
 - Any salary information must meet the configured private floor unless the role is explicitly marked for manual review.
-- Clearance, residency, timezone, travel, sponsorship, and location restrictions must be surfaced rather than guessed.
+- Restrictions and unresolved eligibility questions must be surfaced rather than guessed.
 
 ## Private implementation requirement
 
