@@ -34,7 +34,12 @@ REQUIRED_FILES = {
 }
 
 FORBIDDEN_FILE_PATTERNS = (
-    re.compile(r"(^|/)\.env($|\.)", re.IGNORECASE),
+    # Allow documentation-only templates such as .env.example, while blocking
+    # real environment files such as .env, .env.local, and .env.production.
+    re.compile(
+        r"(^|/)\.env(?:$|\.(?!example$|sample$|template$)[^/]+$)",
+        re.IGNORECASE,
+    ),
     re.compile(r"\.(pem|key|p12|pfx|pbix)$", re.IGNORECASE),
 )
 
@@ -141,18 +146,43 @@ def validate_paths(files: list[Path], errors: list[str]) -> None:
 
 
 def validate_text(files: list[Path], errors: list[str]) -> None:
-    text_extensions = {".md", ".txt", ".json", ".yml", ".yaml", ".csv", ".py"}
+    text_extensions = {
+        ".md",
+        ".txt",
+        ".json",
+        ".yml",
+        ".yaml",
+        ".csv",
+        ".py",
+        ".js",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".html",
+        ".css",
+        ".toml",
+        ".ini",
+        ".cfg",
+        ".sh",
+        ".example",
+        ".sample",
+        ".template",
+    }
     for path in files:
         if path.suffix.lower() not in text_extensions:
             continue
         relative = path.relative_to(ROOT).as_posix()
         try:
-            text = path.read_text(encoding="utf-8")
+            raw = path.read_bytes()
+            text = raw.decode("utf-8")
+        except OSError as exc:
+            fail(f"Unable to read text file {relative}: {exc}", errors)
+            continue
         except UnicodeDecodeError:
             fail(f"Text file is not valid UTF-8: {relative}", errors)
             continue
 
-        if "\r\n" in text:
+        if b"\r\n" in raw:
             fail(f"Text file uses CRLF line endings: {relative}", errors)
         for name, pattern in SECRET_PATTERNS.items():
             if pattern.search(text):
