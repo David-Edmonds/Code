@@ -32,3 +32,23 @@ jobs:
           path: apps/our-table/build/out/
           if-no-files-found: error
           retention-days: 14
+      - name: Prepare minimal toolchain for local preview compilation
+        run: |
+          set -euo pipefail
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          STAGE="$RUNNER_TEMP/our-table-toolchain"
+          mkdir -p "$STAGE/build-tools/35.0.0/lib" "$STAGE/platforms/android-35"
+          cp "$TOOLS/aapt2" "$TOOLS/zipalign" "$TOOLS/d8" "$TOOLS/apksigner" "$STAGE/build-tools/35.0.0/"
+          cp "$TOOLS/lib/d8.jar" "$TOOLS/lib/apksigner.jar" "$STAGE/build-tools/35.0.0/lib/"
+          cp -r "$TOOLS/lib64" "$STAGE/build-tools/35.0.0/"
+          cp "$ANDROID_HOME/platforms/android-35/android.jar" "$STAGE/platforms/android-35/"
+          tar -C "$STAGE" -czf "$RUNNER_TEMP/our-table-toolchain.tar.gz" .
+          sha256sum "$RUNNER_TEMP/our-table-toolchain.tar.gz" > "$RUNNER_TEMP/our-table-toolchain.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: our-table-local-android-toolchain
+          path: |
+            ${{ runner.temp }}/our-table-toolchain.tar.gz
+            ${{ runner.temp }}/our-table-toolchain.sha256
+          if-no-files-found: error
+          retention-days: 1
