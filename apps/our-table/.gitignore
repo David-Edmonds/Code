@@ -1,0 +1,7 @@
+build/
+.local-signing/
+*.jks
+*.keystore
+*.apk
+__pycache__/
+test-results/
