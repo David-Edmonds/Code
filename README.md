@@ -8,6 +8,7 @@ This repository is **not** a place for passwords, private family information, cl
 
 | Project | Purpose | Current stage | Next release |
 |---|---|---|---|
+| [Startup Operations Dashboards](projects/startup-operations/) | Seven editable Tableau dashboards with operational KPIs, trends and reconciled movements | Published on portfolio and Tableau Public; synthetic data | Reuse the documented template and validate any replacement data |
 | David Analytics Lab | Portfolio, analytics tools, verified Confia role, and professional proof | Source foundation merged | Regenerate and publish the GitHub Pages site, replace the resume PDF, and verify the live release |
 | Social Content OS | One workflow for grow_goodness, CultureRankHQ, and future brands | Blueprint | Validate Airtable + Buffer data flow |
 | Job Opportunity Engine | Find, score, prepare, and track high-fit remote analytics roles | Blueprint | Define scoring rules and data sources |
