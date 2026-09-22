@@ -2,6 +2,17 @@
   "version": 1,
   "projects": [
     {
+      "id": "startup-operations",
+      "name": "Startup Operations Dashboards",
+      "repository": "David-Edmonds/Code",
+      "path": "projects/startup-operations",
+      "status": "published",
+      "priority": 4,
+      "portfolio_url": "https://david-edmonds.github.io/work/startup-operations/",
+      "tableau_url": "https://public.tableau.com/app/profile/david.edmonds5066/viz/Startup-Operations-Expanded/FrontendPerformance",
+      "next_action": "Reuse the synthetic-data template; rebuild both extracts and validate metrics before production-data replacement"
+    },
+    {
       "id": "david-analytics-lab",
       "name": "David Analytics Lab",
       "repository": "David-Edmonds/David-Edmonds.github.io",

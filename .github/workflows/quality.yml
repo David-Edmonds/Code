@@ -26,3 +26,6 @@ jobs:
 
       - name: Verify clean repository formatting
         run: git diff --check
+
+      - name: Verify Tableau project package
+        run: python3 projects/startup-operations/validate.py
