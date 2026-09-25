@@ -1,0 +1,33 @@
+name: Our Table Android preview
+on:
+  pull_request:
+    paths:
+      - 'apps/our-table/**'
+      - '.github/workflows/our-table-android.yml'
+permissions:
+  contents: read
+jobs:
+  android-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify JavaScript and recipe calculations
+        run: |
+          for f in apps/our-table/web/*.js; do node --check "$f"; done
+          node --test apps/our-table/tests/*.test.cjs
+      - name: Ensure Android SDK components
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0' >/dev/null
+      - name: Build and verify personal-preview APK
+        run: bash apps/our-table/scripts/build-android.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: our-table-android-preview
+          path: apps/our-table/build/out/
+          if-no-files-found: error
+          retention-days: 14
